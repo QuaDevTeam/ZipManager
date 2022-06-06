@@ -14,6 +14,17 @@
     "build": "rimraf ./dist && tsc --module commonjs && cross-env NODE_ENV=production rollup -c rollup.config.ts && rimraf ./dist/lib"
   },
   "author": "QuaDevTeam",
+  "maintainers": [
+    {
+      "name": "BackRunner",
+      "email": "dev@backrunner.top",
+      "url": "https://github.com/backrunner"
+    }
+  ],
+  "homepage": "https://github.com/QuaDevTeam/ZipManager",
+  "bugs": {
+    "url": "https://github.com/QuaDevTeam/ZipManager/issues"
+  },
   "license": "Apache-2.0",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.0",
