@@ -1,21 +1,25 @@
 # @quajs/zip-manager
 
-Manage zip assets in browser
-
-This project is created by [create-a-typescript-lib](https://github.com/backrunner/create-a-typescript-lib).
+Manage zip assets in browser.
 
 ## Usage
 
-To build this project, you can run this command:
+Step 1: Install this package.
 
 ```bash
-npm run build
+$ npm i @quajs/zip-manager
 ```
 
-Also, you can use `npm run watch` to start a file changes.
+Step 2: Import this package to your project.
 
-All changes you make will immediately trigger compilation and take effect on the generated script.
+```ts
+import ZipManager from '@quajs/zip-manager';
+
+const manager = new ZipManager('assets');
+
+manager.load('https://somewhere/assets.zip');
+```
 
 ## License
 
-Apache-2.0
+Apache 2.0

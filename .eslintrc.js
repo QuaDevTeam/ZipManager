@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['alloy', 'alloy/typescript', 'prettier'],
+  extends: ['alloy', 'alloy/vue', 'alloy/typescript', 'prettier'],
   env: {
     node: true,
   },
