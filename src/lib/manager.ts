@@ -1,7 +1,6 @@
 import { DownloadableZipInfo } from '../types/zip';
 import { destroyDbInstance, getDbInstance, ZipDatabase } from './db';
 import { downloadAndUnzip } from './zip';
-import { DownloadZipOpts } from './downloader';
 import { ProgressCallback } from '../types/manager';
 
 const managers: Record<string, ZipManager> = {};
