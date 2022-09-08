@@ -1,7 +1,8 @@
 import { DownloadableZipInfo } from '../types/zip';
 import { destroyDbInstance, getDbInstance, ZipDatabase } from './db';
 import { downloadAndUnzip } from './zip';
-import {ProgressCallback} from "../types/manager";
+import { DownloadZipOpts } from './downloader';
+import { ProgressCallback } from '../types/manager';
 
 const managers: Record<string, ZipManager> = {};
 
@@ -22,16 +23,19 @@ export default class ZipManager {
    * Load zip assets package from URL
    * @param zipInfo can be an URL or a DownloadableZipInfo
    */
-  public async load(zipInfo: string | DownloadableZipInfo, progressCallback?: ProgressCallback) {
-    let zip: DownloadableZipInfo;
-    if (typeof zipInfo === 'string') {
-      zip = {
-        url: zipInfo,
-      };
-    } else {
-      zip = zipInfo;
-    }
-    await downloadAndUnzip(this.db, zip, progressCallback);
+  public async load(
+    zipInfo: string | DownloadableZipInfo,
+    options?: {
+      onProgress?: ProgressCallback;
+      // eslint-disable-next-line no-undef
+      fetchOptions?: RequestInit;
+    },
+  ) {
+    const formattedZipInfo: DownloadableZipInfo = typeof zipInfo === 'string' ? { url: zipInfo } : zipInfo;
+    await downloadAndUnzip(this.db, {
+      zipInfo: formattedZipInfo,
+      ...options,
+    });
   }
 
   /**

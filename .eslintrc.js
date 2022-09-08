@@ -1,6 +1,7 @@
 module.exports = {
   extends: ['alloy', 'alloy/vue', 'alloy/typescript', 'prettier'],
   env: {
-    node: true,
+    browser: true,
+    es2022: true,
   },
 };
