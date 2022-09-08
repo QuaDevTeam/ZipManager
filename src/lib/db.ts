@@ -1,13 +1,15 @@
 import Dexie, { Table } from 'dexie';
-import { ZipAsset } from '../types/db';
+import { ZipAsset, ZipMeta } from '../types/db';
 
 const DB_VERSION = 1;
 const DB_STRUCTURE = {
-  assets: '++id, &key, name, packageName, data, ctime',
+  assets: '++id, key, name, bundleName, data, createTime',
+  meta: '++id, &bundleName, downloadTime, version, hash',
 };
 
 export class ZipDatabase extends Dexie {
   public assets!: Table<ZipAsset>;
+  public meta!: Table<ZipMeta>;
 
   public constructor(name: string) {
     super(name);

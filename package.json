@@ -1,6 +1,6 @@
 {
   "name": "@quajs/zip-manager",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Manage zip assets in browser",
   "main": "dist/zip-manager.umd.js",
   "module": "dist/zip-manager.esm.js",

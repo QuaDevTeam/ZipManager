@@ -9,9 +9,16 @@ export interface DownloadZipOpts {
   fetchOptions?: RequestInit;
 }
 
+export interface CheckVersionOpts {
+  zipInfo: DownloadableZipInfo;
+  // eslint-disable-next-line no-undef
+  fetchOptions?: RequestInit;
+}
+
 export const downloadZip = async (opts: DownloadZipOpts) => {
   const { zipInfo, onProgress } = opts;
   const { url, hash } = zipInfo;
+  // Request the latest bundle
   const res = await fetch(url, {
     method: 'GET',
     ...opts.fetchOptions,
@@ -54,16 +61,35 @@ export const downloadZip = async (opts: DownloadZipOpts) => {
     return res;
   }, new Uint8Array());
   // Validate downloaded content
-  const zipHash = await sha256(new Uint8Array(zipData));
-  if (!hash) {
-    return zipData;
-  }
-  if (zipHash !== hash) {
+  try {
+    if (hash) {
+      const zipHash = await sha256(new Uint8Array(zipData));
+      if (zipHash !== hash) {
+        throw {
+          reason: 'Corrputed package data.',
+          res,
+          hash: zipHash,
+        };
+      }
+    }
+  } catch (err) {
+    console.error(err);
     throw {
-      reason: 'Corrputed package data.',
+      reason: 'Cannot validate the downloaded data.',
       res,
-      hash: zipHash,
+      originalError: err,
     };
   }
-  return zipData;
+  return {
+    zipData,
+    hash,
+    version: Number(res.headers.get('X-Qua-Version')) || Date.now(),
+  };
+};
+
+/**
+ * Get the version of the remote asset bundle
+ */
+export const checkRemoteZipVersion = (opts: CheckVersionOpts) => {
+  // TODO: send a head request to check remote asset version
 };

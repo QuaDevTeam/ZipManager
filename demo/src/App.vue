@@ -25,7 +25,7 @@
         <tr v-for="item in list" :key="item.key">
           <td>{{ item.key }}</td>
           <td>{{ item.name }}</td>
-          <td>{{ item.packageName }}</td>
+          <td>{{ item.bundleName }}</td>
         </tr>
       </table>
     </div>

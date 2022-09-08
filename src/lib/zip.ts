@@ -15,7 +15,7 @@ export const unzip = (zipData: ArrayBuffer) => {
   });
 };
 
-const normalizeZipName = (zipInfo: DownloadableZipInfo) => {
+export const normalizeZipName = (zipInfo: DownloadableZipInfo) => {
   if (zipInfo.name) return zipInfo.name;
   const lastPart = zipInfo.url.slice(zipInfo.url.lastIndexOf('/') + 1);
   if (lastPart.includes('?')) {
@@ -25,15 +25,25 @@ const normalizeZipName = (zipInfo: DownloadableZipInfo) => {
 };
 
 export const downloadAndUnzip = async (db: ZipDatabase, opts: DownloadZipOpts) => {
-  const zip = await downloadZip(opts);
-  const unzipped = await unzip(zip);
+  const { zipData, hash, version } = await downloadZip(opts);
+  const downloadTime = Date.now();
+  const unzipped = await unzip(zipData);
   const zipName = normalizeZipName(opts.zipInfo);
+  // Put the downloaded data into idb
   const dataset = Object.keys(unzipped).map((fileName) => ({
     key: `${zipName}:${fileName}`,
     name: fileName,
-    packageName: zipName,
+    bundleName: zipName,
     data: unzipped[fileName],
-    ctime: Date.now(),
+    version,
+    createTime: Date.now(),
   }));
   await db.assets.bulkPut(dataset);
+  // Save meta into idb
+  await db.meta.add({
+    version,
+    downloadTime,
+    bundleName: zipName,
+    hash: hash || '',
+  });
 };

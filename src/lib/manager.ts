@@ -1,6 +1,6 @@
 import { DownloadableZipInfo } from '../types/zip';
 import { destroyDbInstance, getDbInstance, ZipDatabase } from './db';
-import { downloadAndUnzip } from './zip';
+import { downloadAndUnzip, normalizeZipName } from './zip';
 import { ProgressCallback } from '../types/manager';
 
 const managers: Record<string, ZipManager> = {};
@@ -31,6 +31,17 @@ export default class ZipManager {
     },
   ) {
     const formattedZipInfo: DownloadableZipInfo = typeof zipInfo === 'string' ? { url: zipInfo } : zipInfo;
+    // Firstly, check if the zip is already downloaded
+    const normalizedZipName = normalizeZipName(formattedZipInfo);
+    const existedMeta = await this.db.meta
+      .where({
+        bundleName: normalizedZipName,
+      })
+      .toArray();
+    if (existedMeta?.length) {
+      // TODO: already downloaded, check remote assets version first
+    }
+    // Download asset bundle to the local
     await downloadAndUnzip(this.db, {
       zipInfo: formattedZipInfo,
       ...options,
@@ -39,30 +50,40 @@ export default class ZipManager {
 
   /**
    * Get raw Dexie database item
-   * @param zipName zip assets package name
+   * @param bundleName zip assets bundle name
    * @param assetName name of the asset
    * @returns Raw Dexie database item
    */
-  public async getRaw(zipName: string, assetName: string) {
-    return await this.db.assets.get({
-      key: `${zipName}:${assetName}`,
-    });
+  public async getRaw(bundleName: string, assetName: string) {
+    const res = await this.db.assets
+      .where({
+        key: `${bundleName}:${assetName}`,
+      })
+      .reverse()
+      .sortBy('version');
+    if (!res?.length) {
+      return null;
+    }
+    return res[0];
   }
 
   /**
    * Get asset data from database
-   * @param zipName zip assets package name
+   * @param bundleName zip assets bundle name
    * @param assetName name of the asset
    * @returns Data of the asset in Uint8Array
    */
-  public async get(zipName: string, assetName: string) {
-    const res = await this.db.assets.get({
-      key: `${zipName}:${assetName}`,
-    });
-    if (!res) {
+  public async get(bundleName: string, assetName: string) {
+    const res = await this.db.assets
+      .where({
+        key: `${bundleName}:${assetName}`,
+      })
+      .reverse()
+      .sortBy('version');
+    if (!res?.length) {
       return null;
     }
-    return res.data;
+    return res[0]?.data;
   }
 
   /**
@@ -71,24 +92,28 @@ export default class ZipManager {
    * @returns Data of the asset in Uin8Array
    */
   public async getByKey(key: string) {
-    const res = await this.db.assets.get({
-      key,
-    });
-    if (!res) {
+    const res = await this.db.assets
+      .where({
+        key,
+      })
+      .reverse()
+      .sortBy('version');
+    if (!res?.length) {
       return null;
     }
-    return res.data;
+    return res[0].data;
   }
 
   /**
    * Get asset data by name
    * @param assetName the name of the asset
-   * @returns An asset data array
+   * @returns An asset array
    */
-  public async getByName(assetName: string) {
+  public async getByName(assetName: string, version?: number) {
     const res = await this.db.assets
       .where({
         name: assetName,
+        ...(version ? { version } : null),
       })
       .toArray();
     if (!res) {
@@ -107,7 +132,8 @@ export default class ZipManager {
       .where({
         name: assetName,
       })
-      .toArray();
+      .reverse()
+      .sortBy('version');
     if (!res?.length) {
       return null;
     }
@@ -116,7 +142,7 @@ export default class ZipManager {
 
   /**
    * List stored asset items
-   * @param zipName asset package name
+   * @param zipName asset bundle name
    * @returns stored asset items
    */
   public async list(zipName?: string) {
@@ -125,14 +151,15 @@ export default class ZipManager {
     }
     return await this.db.assets
       .where({
-        packageName: zipName,
+        bundleName: zipName,
       })
-      .toArray();
+      .reverse()
+      .sortBy('version');
   }
 
   /**
    * Check if some asset exists
-   * @param zipName zip assets package name
+   * @param zipName zip assets bundle name
    * @param assetName name of the asset
    * @returns if the asset exists
    */
@@ -145,7 +172,7 @@ export default class ZipManager {
 
   /**
    * Remove a certain asset
-   * @param zipName zip assets package name
+   * @param zipName zip assets bundle name
    * @param assetName name of the asset
    */
   public async remove(zipName: string, assetName: string) {
@@ -157,12 +184,12 @@ export default class ZipManager {
   }
 
   /**
-   * Remove assets by package name
-   * @param zipName zip assets package name
+   * Remove assets by bundle name
+   * @param zipName zip assets bundle name
    */
-  public async removePackage(zipName: string) {
+  public async removeBundle(zipName: string) {
     const collection = await this.db.assets.where({
-      packageName: zipName,
+      bundleName: zipName,
     });
     const count = (await collection?.count()) || 0;
     if (!count) {
