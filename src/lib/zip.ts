@@ -2,6 +2,7 @@ import { unzip as unzipPackage, Unzipped } from 'fflate';
 import { DownloadableZipInfo } from '../types/zip';
 import { ZipDatabase } from './db';
 import { downloadZip } from './downloader';
+import {ProgressCallback} from "../types/manager";
 
 export const unzip = (zipData: ArrayBuffer) => {
   return new Promise<Unzipped>((resolve, reject) => {
@@ -24,8 +25,8 @@ const normalizeZipName = (zipInfo: DownloadableZipInfo) => {
   return lastPart;
 };
 
-export const downloadAndUnzip = async (db: ZipDatabase, zipInfo: DownloadableZipInfo) => {
-  const zip = await downloadZip(zipInfo);
+export const downloadAndUnzip = async (db: ZipDatabase, zipInfo: DownloadableZipInfo, progressCallback?: ProgressCallback) => {
+  const zip = await downloadZip(zipInfo, progressCallback);
   const unzipped = await unzip(zip);
   const zipName = normalizeZipName(zipInfo);
   const dataset = Object.keys(unzipped).map((fileName) => ({

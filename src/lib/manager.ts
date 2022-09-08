@@ -1,12 +1,13 @@
 import { DownloadableZipInfo } from '../types/zip';
 import { destroyDbInstance, getDbInstance, ZipDatabase } from './db';
 import { downloadAndUnzip } from './zip';
+import {ProgressCallback} from "../types/manager";
 
 const managers: Record<string, ZipManager> = {};
 
 export default class ZipManager {
-  private name: string;
-  private db: ZipDatabase;
+  private readonly name: string;
+  private readonly db: ZipDatabase;
 
   public constructor(name = 'default') {
     if (managers[name]) {
@@ -21,7 +22,7 @@ export default class ZipManager {
    * Load zip assets package from URL
    * @param zipInfo can be an URL or a DownloadableZipInfo
    */
-  public async load(zipInfo: string | DownloadableZipInfo) {
+  public async load(zipInfo: string | DownloadableZipInfo, progressCallback?: ProgressCallback) {
     let zip: DownloadableZipInfo;
     if (typeof zipInfo === 'string') {
       zip = {
@@ -30,7 +31,7 @@ export default class ZipManager {
     } else {
       zip = zipInfo;
     }
-    await downloadAndUnzip(this.db, zip);
+    await downloadAndUnzip(this.db, zip, progressCallback);
   }
 
   /**
